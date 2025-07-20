@@ -4,7 +4,8 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 5f;
+    public float walkSpeed = 5f;
+    public float sprintSpeed = 9f;
     public float jumpHeight = 1.5f;
     public float gravity = -9.81f;
 
@@ -12,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private InputSystem_Actions inputActions;
     private Vector2 movementInput;
     private float verticalVelocity;
+    private bool isSprinting = false;
 
     private void Awake()
     {
@@ -20,10 +22,12 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        inputActions.Player.Enable(); // enables the Player action map
+        inputActions.Player.Enable();
         inputActions.Player.Move.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
         inputActions.Player.Move.canceled += _ => movementInput = Vector2.zero;
         inputActions.Player.Jump.performed += _ => Jump();
+        inputActions.Player.Sprint.performed += _ => isSprinting = true;
+        inputActions.Player.Sprint.canceled += _ => isSprinting = false;
     }
 
     private void OnDisable()
@@ -38,8 +42,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
         Vector3 move = new Vector3(movementInput.x, 0, movementInput.y);
-        controller.Move(move * speed * Time.deltaTime);
+        controller.Move(move * currentSpeed * Time.deltaTime);
 
         verticalVelocity += gravity * Time.deltaTime;
         if (controller.isGrounded && verticalVelocity < 0)
